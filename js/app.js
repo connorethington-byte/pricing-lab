@@ -48,6 +48,9 @@
     } catch (e) { /* private mode etc. — just carry on */ }
     return null;
   }
+  function isPhone() {
+    return matchMedia("(max-width: 560px)").matches;
+  }
   function el(html) {
     const t = document.createElement("template");
     t.innerHTML = html.trim();
@@ -56,6 +59,7 @@
   function show(node) {
     app.innerHTML = "";
     app.appendChild(node);
+    if (isTest) app.prepend(el(`<div class="test-badge">🧪 TEST MODE — this row will be flagged TEST</div>`));
     window.scrollTo(0, 0);
     const h = node.querySelector("h1, h2");
     if (h) { h.setAttribute("tabindex", "-1"); h.focus({ preventScroll: true }); }
@@ -70,6 +74,9 @@
       return `<li class="${s || ""}"><span class="box">${mark}</span>${it.label}</li>`;
     }).join("");
     const inCart = trip.results.filter((r) => r.spent > 0).length;
+    const gotCount = LIST.filter((it) => trip.list[it.id] === "got").length;
+    // On phones the list starts closed as a small "📋 List (x/8)" button.
+    const openAttr = isPhone() ? "" : "open";
     return `
       <header class="hud">
         <div class="budget">
@@ -83,8 +90,11 @@
           </div>
           <div class="budget-sub">of ${money(CFG.budget)} · ${window.ART.cart()} ${inCart} in cart</div>
         </div>
-        <details class="list" open>
-          <summary>Grocery list</summary>
+        <details class="list" ${openAttr}>
+          <summary>
+            <span class="list-title">Grocery list</span>
+            <span class="list-pill">📋 List (${gotCount}/${LIST.length})</span>
+          </summary>
           <ul>${items}</ul>
         </details>
       </header>`;
@@ -107,7 +117,6 @@
           </ul>
           <p class="fine">Anonymous: no names or emails. Your choices are saved as one row when you check out.</p>
           ${AISLES.length < 10 ? `<p class="preview-note">Preview build: ${AISLES.length} of 10 aisles open.</p>` : ""}
-          ${isTest ? `<p class="preview-note">Test mode (?test=1): this row will be marked as a test.</p>` : ""}
           <!-- honeypot: hidden from people, bots tend to fill it -->
           <label class="hp" aria-hidden="true">Website <input id="hp" name="website" tabindex="-1" autocomplete="off"></label>
           <button class="btn primary big" id="start">Grab a cart →</button>
@@ -202,7 +211,7 @@
         aisle,
         version,
         choice: opt ? opt.id : "skip",
-        name: opt ? opt.name : null,
+        name: opt ? (opt.receiptName || opt.name) : null,
         qty: opt ? aisle.quantity : 0,
         spent,
         budgetAfter: trip.budgetLeft,
@@ -221,7 +230,8 @@
     const row = {
       session_id: trip.sessionId,
       app_version: CFG.appVersion,
-      is_test: isTest ? 1 : 0,
+      row_type: isTest ? "TEST" : "LIVE",  // easy to spot in the Sheet
+      is_test: isTest ? 1 : 0,            // same thing as a number (handy in R)
       started_at: trip.startedAt,
       finished_at: new Date().toISOString(),
       device: matchMedia("(pointer: coarse)").matches ? "touch" : "mouse",

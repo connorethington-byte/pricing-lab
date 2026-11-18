@@ -99,6 +99,7 @@ h1, h2 { font-family: var(--font-head); margin: 0; line-height: 1.1; outline: no
 .budget-sub { font-size: 13px; color: var(--ink-soft); display: flex; align-items: center; gap: 4px; }
 .cart-icon { width: 18px; height: 16px; margin-left: 6px; }
 .list summary { font: 600 15px var(--font-head); cursor: pointer; }
+.list-pill { display: none; }
 .list ul { list-style: none; padding: 0; margin: 6px 0 0; columns: 2; column-gap: 10px; font-size: 14px; }
 .list li { display: flex; align-items: center; gap: 6px; break-inside: avoid; margin-bottom: 3px; }
 .list .box {
@@ -171,11 +172,34 @@ h1, h2 { font-family: var(--font-head); margin: 0; line-height: 1.1; outline: no
 .debug { max-width: 620px; margin: 22px auto 0; font-size: 14px; }
 .debug pre { background: #F3EEE3; border: 2px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 12.5px; }
 
+/* ---------- test mode badge ---------- */
+.test-badge {
+  background: var(--mustard); border: 2.5px solid var(--ink); border-radius: 10px;
+  font: 600 14px var(--font-head); text-align: center; padding: 6px 10px; margin-bottom: 12px;
+}
+
 /* ---------- phones ---------- */
 @media (max-width: 560px) {
   body { font-size: 16px; }
-  .hud { grid-template-columns: 1fr; }
-  .list:not([open]) { padding-bottom: 10px; }
+  /* Budget on the left, small list button on the right */
+  .hud { grid-template-columns: 1fr auto; align-items: start; }
+  .list { position: relative; padding: 0; border: 0; background: none; }
+  .list summary { list-style: none; }
+  .list summary::-webkit-details-marker { display: none; }
+  .list-title { display: none; }
+  .list-pill {
+    display: inline-block; white-space: nowrap;
+    background: var(--card); border: 3px solid var(--ink); border-radius: 999px;
+    padding: 8px 12px; box-shadow: 0 3px 0 var(--ink);
+  }
+  .list[open] .list-pill { background: #FFF1CF; }
+  /* Opened list drops down as a little panel */
+  .list ul {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 5;
+    width: 240px; columns: 1;
+    background: var(--card); border: 3px solid var(--ink); border-radius: 14px;
+    padding: 10px 14px; box-shadow: var(--shadow); font-size: 15px;
+  }
   .options { gap: 10px; }
   .opt-name { font-size: 15px; }
   .opt-price { font-size: 22px; }

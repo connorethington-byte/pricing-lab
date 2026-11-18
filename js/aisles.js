@@ -34,6 +34,7 @@ window.AISLES = [
       {
         id: "regular",
         name: "Avocados",
+        receiptName: "Regular avocados",         // how it reads on the receipt
         unitPrice: 1.0,
         size: 0.85,                              // drawing scale
         stock: { A: "full", B: "full" },
@@ -42,6 +43,7 @@ window.AISLES = [
       {
         id: "jumbo",
         name: "JUMBO Avocados",
+        receiptName: "Jumbo avocados",
         unitPrice: 2.0,
         size: 1.25,                              // drawn bigger
         stock: { A: "full", B: 3 },
