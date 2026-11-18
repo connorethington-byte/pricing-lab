@@ -9,7 +9,7 @@ window.LAB_CONFIG = {
   // Paste your Apps Script "Web app URL" here (ends in /exec).
   // Leave it empty and the site runs in "offline" mode: nothing is sent,
   // and the checkout screen shows the row that WOULD have been sent.
-  sheetUrl: "",
+  sheetUrl: "https://script.google.com/macros/s/AKfycbyVtlH9_zgbmESxhCC8-naNhIDbH9pkn762hfD6S5Jhox-qdOe4Gb5jcJGRraWkslu_IA/exec",
 
   budget: 45.0,
 
