@@ -44,8 +44,15 @@ Connor Ethington — UCLA Cognitive Science (Entrepreneurship minor), graduating
 - Principle: "Scarcity can push customers to the premium option even when the price doesn't change."
 - Results: two bars (% Jumbo A vs B). Reveal card: "You saw 'Only 3 left!' and picked Jumbo — like X% of shoppers who saw it (vs Y% who didn't)."
 
-### Aisles 2–10 — DRAFTS (not locked; keep config-driven)
-- 2 Eggs: Dozen / Half dozen (60% of dozen price) / Skip; dozen price randomized $3/$5/$7/$9 (half $1.80/$3.00/$4.20/$5.40). Principle: on necessities, customers buy less rather than leave (shrinkflation).
+### Aisle 2 — Dairy: Eggs (Necessity pricing) — LOCKED
+- List item "Eggs." Three choices: **Dozen**, **Half dozen**, or **Skip**. One carton (quantity 1).
+- **4 price versions**, randomly assigned: dozen **$3 / $5 / $7 / $9**. Half dozen is always 60% of the dozen: **$1.80 / $3.00 / $4.20 / $5.40**.
+- Cartoon egg cartons side by side: a full dozen carton and a smaller half-dozen carton.
+- Record: price version (`a2_version` = dozen price, "3"/"5"/"7"/"9"), choice (`dozen`/`half`/`skip`), budget remaining, seconds on aisle.
+- Receipt: "1 × Eggs (dozen)" or "1 × Eggs (half dozen)".
+- Principle: on necessities, customers buy less rather than leave (shrinkflation).
+
+### Aisles 3–10 — DRAFTS (not locked; keep config-driven)
 - 3 Ice cream (not on list): pint at $3/$5/$7/$9 → buy rate; compare with eggs.
 - 4 Cereal: "Frosted Crunch" $5.00 (fancy box, "America's #1!" badge) vs "Market Basics" at $4.50/$3.75/$3.00 → % store brand.
 - 5 New product (not on list): "NEW!" end-cap, random price $4–$14 in $1 steps → demand/revenue/profit curves (~$3 unit cost). Product TBD (placeholder: sparkling protein soda 4-pack).
@@ -55,6 +62,13 @@ Connor Ethington — UCLA Cognitive Science (Entrepreneurship minor), graduating
 - 9 Pasta sauce $4.00 + $1-off coupon: A one-click vs B type a 6-digit code → coupon use vs budget-consciousness.
 - 10 Paper towels: A flat (1/$2, 4/$8, 12/$24) vs B tiered (1/$2, 4/$7, 12/$18) → pack size + spend.
 - Budget check: cheapest list ≈ $30; typical upgrades ≈ $47; plus both extras ≈ $60.
+
+## Implementation notes (current state)
+- Live: Aisles 1–2, then checkout. Site: https://connorethington-byte.github.io/pricing-lab/
+- Files: `js/config.js` (site name, budget, Sheet URL, `appVersion` — bump when an aisle changes), `js/aisles.js` (all aisle config; `ready: true` shows an aisle), `js/art.js` (SVG drawings), `js/app.js` (logic), `apps-script/Code.gs` (backend; auto-adds new columns, so new aisles need no Sheet edits).
+- Sheet columns per aisle: `aN_version, aN_choice, aN_qty, aN_spent, aN_budget_after, aN_seconds`.
+- `?test=1` → repeat runs allowed, row flagged `row_type = TEST` / `is_test = 1` (excluded from results). `?reset=1` clears the one-per-browser lock.
+- Receipt uses each option's `receiptName`. On phones the grocery list collapses to a "📋 List (x/8)" button.
 
 ### After checkout
 - Stated WTP for the new product ("most you'd pay?") vs actual aisle-5 behavior.

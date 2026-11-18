@@ -153,10 +153,16 @@
     const enteredMs = performance.now();
     let selected = null;
 
+    // A price can be one number, or a list of prices by version (e.g. eggs).
+    const unitPrice = (opt) =>
+      typeof opt.unitPrice === "object" ? opt.unitPrice[version] : opt.unitPrice;
+    const costOf = (opt) => Math.round(unitPrice(opt) * aisle.quantity * 100) / 100;
+
     const optionCards = aisle.options.map((opt) => {
-      const cost = opt.unitPrice * aisle.quantity;
+      const cost = costOf(opt);
       const over = cost > trip.budgetLeft + 1e-9;
-      const tag = opt.tag[version];
+      const tag = opt.tag && opt.tag[version];
+      const subLine = aisle.quantity > 1 ? `${aisle.quantity} for ${money(cost)}` : (opt.detail || "");
       return `
         <button class="option" data-id="${opt.id}" aria-pressed="false" ${over ? "disabled" : ""}>
           <div class="art">
@@ -165,8 +171,8 @@
           </div>
           <div class="price-card">
             <span class="opt-name">${opt.name}</span>
-            <span class="opt-price">${money(opt.unitPrice)} <small>each</small></span>
-            <span class="opt-total">${over ? "Over budget" : `${aisle.quantity} for ${money(cost)}`}</span>
+            <span class="opt-price">${money(unitPrice(opt))} <small>${aisle.priceLabel || ""}</small></span>
+            <span class="opt-total">${over ? "Over budget" : subLine}</span>
           </div>
         </button>`;
     }).join("");
@@ -181,7 +187,7 @@
             <h2>${aisle.department}</h2>
           </div>
         </div>
-        <p class="aisle-prompt">Your list says <b>${aisle.quantity} ${aisle.title.toLowerCase()}</b>. Pick a kind, or skip.</p>
+        <p class="aisle-prompt">${aisle.prompt}</p>
         <div class="options">${optionCards}</div>
         <div class="actions">
           <button class="btn ghost" id="skip">Skip ${aisle.title.toLowerCase()}</button>
@@ -197,14 +203,14 @@
         node.querySelectorAll(".option").forEach((b) =>
           b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
         goBtn.disabled = false;
-        goBtn.textContent = `Add to cart · ${money(selected.unitPrice * aisle.quantity)} →`;
+        goBtn.textContent = `Add to cart · ${money(costOf(selected))} →`;
       });
     });
     node.querySelector("#skip").addEventListener("click", () => finishAisle(null));
     goBtn.addEventListener("click", () => finishAisle(selected));
 
     function finishAisle(opt) {
-      const spent = opt ? opt.unitPrice * aisle.quantity : 0;
+      const spent = opt ? costOf(opt) : 0;
       trip.budgetLeft = Math.round((trip.budgetLeft - spent) * 100) / 100;
       if (aisle.listItem) trip.list[aisle.listItem] = opt ? "got" : "skipped";
       trip.results.push({

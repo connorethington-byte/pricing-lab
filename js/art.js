@@ -70,6 +70,53 @@ window.ART = (function () {
       </svg>`;
   }
 
+  // ---------- Eggs ----------
+  function egg(x, y) {
+    return `
+      <g transform="translate(${x} ${y})">
+        <path d="M0,-17 C9,-17 13,-4 13,4 C13,12 7,16 0,16 C-7,16 -13,12 -13,4 C-13,-4 -9,-17 0,-17 Z"
+              fill="#FFF6E5" stroke="${INK}" stroke-width="2.3"/>
+        <ellipse cx="-5" cy="-5" rx="2.5" ry="5" fill="#fff" transform="rotate(20 -5 -5)"/>
+      </g>`;
+  }
+
+  // An open egg carton with `count` eggs in two rows (12 = dozen, 6 = half dozen).
+  // Same 220 x 170 box as the crate, so cards line up; half dozen is drawn narrower.
+  function eggCarton(count) {
+    const cols = count / 2, step = 30;
+    const w = cols * step + 16, x0 = 110 - w / 2, x1 = 110 + w / 2;
+    const ex = (i) => x0 + 8 + step / 2 + i * step;          // egg centre x for column i
+    let backRow = "", frontRow = "", cups = "";
+    for (let i = 0; i < cols; i++) {
+      backRow += egg(ex(i), 86);
+      frontRow += egg(ex(i), 104);
+      cups += ` q${step / 2},10 ${step},0`;                    // each cup dips under its egg
+    }
+    return `
+      <svg viewBox="0 0 220 170" class="crate-svg" aria-hidden="true">
+        <!-- lid, flipped open behind -->
+        <path d="M${x0 + 6},30 L${x1 - 6},30 L${x1},78 L${x0},78 Z" fill="#B9D4E8" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="${110 - Math.min(44, w / 2 - 14)}" y="40" width="${Math.min(88, w - 28)}" height="24" rx="6" fill="#fff" stroke="${INK}" stroke-width="2"/>
+        <text x="110" y="57" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="13" fill="${INK}">${count} EGGS</text>
+        <!-- tray back -->
+        <path d="M${x0},78 L${x1},78 L${x1},112 L${x0},112 Z" fill="#8FB3CE" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        ${backRow}
+        ${frontRow}
+        <!-- tray front with cup shapes -->
+        <path d="M${x0},112 l8,0 ${cups} l8,0 L${x1 - 4},150 L${x0 + 4},150 Z" fill="#A9C9E0" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M${x0 + 6},136 L${x1 - 6},136" stroke="#8FB3CE" stroke-width="3"/>
+      </svg>`;
+  }
+
+  function eggIcon() {
+    return `
+      <svg viewBox="-20 -24 40 46" class="sign-icon" aria-hidden="true">
+        <path d="M0,-20 C11,-20 16,-5 16,4 C16,14 9,19 0,19 C-9,19 -16,14 -16,4 C-16,-5 -11,-20 0,-20 Z"
+              fill="#FFF6E5" stroke="${INK}" stroke-width="2.5"/>
+        <ellipse cx="-6" cy="-6" rx="3" ry="6" fill="#fff" transform="rotate(20 -6 -6)"/>
+      </svg>`;
+  }
+
   function cart() {
     return `
       <svg viewBox="0 0 32 28" class="cart-icon" aria-hidden="true">
@@ -81,8 +128,9 @@ window.ART = (function () {
   // Lookup: aisle.art -> function(option, version) returning the product drawing.
   const products = {
     avocado: (opt, version) => avocadoCrate(opt.size, opt.stock[version]),
+    eggs: (opt) => eggCarton(opt.count),
   };
-  const signIcons = { avocado: avocadoHalf };
+  const signIcons = { avocado: avocadoHalf, eggs: eggIcon };
 
   return { products, signIcons, cart };
 })();
