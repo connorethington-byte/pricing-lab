@@ -232,6 +232,74 @@ h1, h2 { font-family: var(--font-head); margin: 0; line-height: 1.1; outline: no
 .debug { max-width: 620px; margin: 22px auto 0; font-size: 14px; }
 .debug pre { background: #F3EEE3; border: 2px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; font-size: 12.5px; }
 
+.opt-small { font-size: 14px; color: var(--ink-soft); }
+.budget-label { display: inline-flex; align-items: center; gap: 4px; }
+.budget-label .cart-icon { margin-left: 0; }
+
+/* ---------- survey ---------- */
+.survey .card {
+  background: var(--card); border: 3px solid var(--ink); border-radius: var(--radius);
+  padding: 26px 22px; box-shadow: var(--shadow); max-width: 620px; margin: 0 auto;
+}
+.survey h2 { font-size: clamp(24px, 6vw, 32px); margin: 4px 0 6px; }
+.q { border: 0; padding: 0; margin: 18px 0; }
+.q legend { font-weight: 800; margin-bottom: 8px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill input { position: absolute; opacity: 0; pointer-events: none; }
+.pill span {
+  display: inline-block; padding: 8px 14px; border: 2.5px solid var(--ink); border-radius: 999px;
+  background: var(--card); cursor: pointer; font-weight: 600; font-size: 15px;
+}
+.pill input:checked + span { background: var(--green); color: #fff; }
+.pill input:focus-visible + span { outline: 3px solid var(--mustard); outline-offset: 2px; }
+
+/* ---------- reveal ---------- */
+.reveal-head { text-align: center; margin: 4px 0 18px; }
+.reveal-head h2 { font-size: clamp(30px, 7vw, 44px); color: var(--green-dark); }
+.scorecards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+.scard {
+  background: var(--card); border: 3px solid var(--ink); border-radius: 14px; box-shadow: var(--shadow);
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 2px;
+}
+.scard.big { grid-column: 1 / -1; background: #E6F4DF; align-items: center; text-align: center; }
+.slabel { font: 600 14px var(--font-head); color: var(--ink-soft); }
+.sval { font: 700 30px var(--font-head); }
+.scard.big .sval { font-size: 52px; color: var(--green-dark); }
+.sval small { font-size: 0.45em; color: var(--ink-soft); }
+.sval.small { font-size: 22px; }
+.ssub { font-size: 13px; color: var(--ink-soft); }
+.bad { color: var(--tomato); font-weight: 800; }
+.good { color: var(--green-dark); font-weight: 800; }
+
+.rgroup {
+  background: var(--card); border: 3px solid var(--ink); border-radius: 14px;
+  padding: 12px 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+}
+.rgroup h3 { font: 700 20px var(--font-head); margin: 0 0 6px; }
+.rgroup ul { list-style: none; padding: 0; margin: 0; }
+.rgroup li { padding: 8px 0; border-top: 2px dashed var(--line); font-size: 15px; }
+.rgroup li:first-child { border-top: 0; }
+.rgroup li span:not(.bad) { color: var(--ink-soft); }
+.rgroup.fell { border-color: var(--tomato); box-shadow: 0 4px 0 var(--tomato); }
+.rgroup.spotted, .rgroup.lucky { border-color: var(--green-dark); box-shadow: 0 4px 0 var(--green-dark); }
+.count-chip {
+  font: 700 13px var(--font-body); background: var(--ink); color: #fff; border-radius: 999px;
+  padding: 1px 8px; vertical-align: middle;
+}
+
+.receipt.wide { max-width: 620px; margin-top: 8px; }
+.rlines li { flex-direction: column; gap: 2px; }
+.rlines .rtop { display: flex; justify-content: space-between; gap: 12px; }
+.rlines .rtop span:last-child { white-space: nowrap; }
+.rlines .rsub { font-family: var(--font-body); font-size: 13px; color: var(--ink-soft); }
+.rlines .skipped .rtop { color: var(--ink-soft); }
+.vbadge {
+  font: 700 11px var(--font-head); border: 1.5px solid var(--ink); border-radius: 6px;
+  padding: 0 5px; margin-right: 4px; white-space: nowrap;
+}
+.vbadge.trap { background: #FDE1DA; }
+.vbadge.deal { background: #DFF2D8; }
+
 /* ---------- test mode badge ---------- */
 .test-badge {
   background: var(--mustard); border: 2.5px solid var(--ink); border-radius: 10px;
@@ -268,6 +336,8 @@ h1, h2 { font-family: var(--font-head); margin: 0; line-height: 1.1; outline: no
   .options.cols-3 .opt-price { font-size: 18px; }
   .options.cols-3 .opt-total { font-size: 12px; }
   .coupon-aisle { grid-template-columns: 1fr; }
+  .scorecards { grid-template-columns: 1fr; }
+  .scard.big .sval { font-size: 44px; }
   .endcap { padding: 0 10px 14px; }
   .actions .btn { flex: 1 1 100%; }
 }
