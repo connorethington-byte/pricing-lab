@@ -52,21 +52,23 @@ Connor Ethington — UCLA Cognitive Science (Entrepreneurship minor), graduating
 - Receipt: "1 × Eggs (dozen)" or "1 × Eggs (half dozen)".
 - Principle: on necessities, customers buy less rather than leave (shrinkflation).
 
-### Aisles 3–10 — DRAFTS (not locked; keep config-driven)
-- 3 Ice cream (not on list): pint at $3/$5/$7/$9 → buy rate; compare with eggs.
-- 4 Cereal: "Frosted Crunch" $5.00 (fancy box, "America's #1!" badge) vs "Market Basics" at $4.50/$3.75/$3.00 → % store brand.
-- 5 New product (not on list): "NEW!" end-cap, random price $4–$14 in $1 steps → demand/revenue/profit curves (~$3 unit cost). Product TBD (placeholder: sparkling protein soda 4-pack).
-- 6 Coffee: A Small $6 / Large $10; B adds Medium $9.50 decoy → % Large.
-- 7 Chips: "$2.50 each" vs "2 for $5 (or $2.50 each)" → units bought.
-- 8 Juice: Basic $3.49 vs Premium $5.99; B shows ~~$8.99~~ $5.99 SALE → % premium.
-- 9 Pasta sauce $4.00 + $1-off coupon: A one-click vs B type a 6-digit code → coupon use vs budget-consciousness.
-- 10 Paper towels: A flat (1/$2, 4/$8, 12/$24) vs B tiered (1/$2, 4/$7, 12/$18) → pack size + spend.
-- Budget check: cheapest list ≈ $30; typical upgrades ≈ $47; plus both extras ≈ $60.
+### Aisles 3–10 — BUILT — DRAFT (playable; details may still change — edit `js/aisles.js`)
+- **3 Frozen: Ice cream** (NOT on list) — one pint, random $3 / $5 / $7 / $9 → Buy or Skip. `a3_version` = price; choice `buy`/`skip`. Compare buy rate with eggs.
+- **4 Cereal** — "Frosted Crunch" $5.00 (fancy box, "America's #1!" badge) vs "Market Basics" (plain box) at random $4.50 / $3.75 / $3.00 → pick or skip. `a4_version` = Market Basics price; choice `brand`/`store`/`skip` → % store brand.
+- **5 NEW product end-cap** (NOT on list) — "NEW!" display; placeholder "LIFT Sparkling Protein Soda" 4-pack (name, pitch, colours, ~$3 unit cost in config). Random price $4–$14 in $1 steps → Buy or Skip. `a5_version` = price → demand/revenue/profit curves.
+- **6 Coffee** — A: Small 12oz $6 / Large 24oz $10. B adds Medium 18oz $9.50 (decoy). Choice `small`/`medium`/`large`/`skip` → % Large.
+- **7 Snacks: Chips** — $2.50/bag, quantity 0–4. A tag "$2.50 each"; B tag "2 for $5" + small print "or $2.50 each". `a7_choice` = `a7_qty` = number of bags (0 = skip).
+- **8 Drinks: Juice** — Basic $3.49 vs Premium $5.99; B shows ~~$8.99~~ $5.99 + SALE tag on Premium. Choice `basic`/`premium`/`skip` → % premium.
+- **9 Pantry: Pasta sauce** — $4.00 with $1-off coupon. A one-click "Clip coupon"; B flyer shows code 482915 that must be typed. Choice `buy`/`skip`; extra column **`a9_coupon`** = Y if bought with the coupon, else N.
+- **10 Household: Paper towels** — 1 roll / 4-pack / 12-pack. A $2 / $8 / $24 (flat); B $2 / $7 / $18 (bulk discount). Choice `1`/`4`/`12`/`skip` → pack size + spend.
+- Budget check: cheapest list ≈ $30; typical upgrades ≈ $47; plus both extras ≈ $60. Options that cost more than the budget left are disabled and show "Over budget".
 
 ## Implementation notes (current state)
-- Live: Aisles 1–2, then checkout. Site: https://connorethington-byte.github.io/pricing-lab/
+- Live: all 10 aisles (1–2 locked, 3–10 built as drafts), then checkout. Site: https://connorethington-byte.github.io/pricing-lab/
 - Files: `js/config.js` (site name, budget, Sheet URL, `appVersion` — bump when an aisle changes), `js/aisles.js` (all aisle config; `ready: true` shows an aisle), `js/art.js` (SVG drawings), `js/app.js` (logic), `apps-script/Code.gs` (backend; auto-adds new columns, so new aisles need no Sheet edits).
-- Sheet columns per aisle: `aN_version, aN_choice, aN_qty, aN_spent, aN_budget_after, aN_seconds`.
+- Sheet columns per aisle: `aN_version, aN_choice, aN_qty, aN_spent, aN_budget_after, aN_seconds` (+ `a9_coupon`).
+- Aisle types in config: `choice` (pick one or skip; one option = Buy/Skip), `quantity` (chips stepper), `coupon` (pasta sauce). Prices/tags can be one value or `{ version: value }`; `onlyIn` limits an option to certain versions.
+- Receipt lists everything bought, then "Skipped from your list: …".
 - `?test=1` → repeat runs allowed, row flagged `row_type = TEST` / `is_test = 1` (excluded from results). `?reset=1` clears the one-per-browser lock.
 - Receipt uses each option's `receiptName`. On phones the grocery list collapses to a "📋 List (x/8)" button.
 

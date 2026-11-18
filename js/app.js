@@ -146,36 +146,24 @@
     aisleScreen();
   }
 
+  // ---------- price helpers ----------
+  // A setting can be one value for everyone, or { version: value } (see aisles.js).
+  function byVersion(setting, version) {
+    if (setting === null || setting === undefined) return undefined;
+    return typeof setting === "object" ? setting[version] : setting;
+  }
+  const round2 = (n) => Math.round(n * 100) / 100;
+  const fits = (cost) => cost <= trip.budgetLeft + 1e-9;   // within budget?
+
   // ---------- screen: one aisle ----------
+  // Every aisle shares the same frame (budget, sign, prompt, Skip / Add buttons).
+  // The middle part comes from a renderer picked by aisle.type.
   function aisleScreen() {
     const aisle = AISLES[trip.aisleIndex];
     const version = trip.versions[aisle.id];
     const enteredMs = performance.now();
-    let selected = null;
-
-    // A price can be one number, or a list of prices by version (e.g. eggs).
-    const unitPrice = (opt) =>
-      typeof opt.unitPrice === "object" ? opt.unitPrice[version] : opt.unitPrice;
-    const costOf = (opt) => Math.round(unitPrice(opt) * aisle.quantity * 100) / 100;
-
-    const optionCards = aisle.options.map((opt) => {
-      const cost = costOf(opt);
-      const over = cost > trip.budgetLeft + 1e-9;
-      const tag = opt.tag && opt.tag[version];
-      const subLine = aisle.quantity > 1 ? `${aisle.quantity} for ${money(cost)}` : (opt.detail || "");
-      return `
-        <button class="option" data-id="${opt.id}" aria-pressed="false" ${over ? "disabled" : ""}>
-          <div class="art">
-            ${window.ART.products[aisle.art](opt, version)}
-            ${tag ? `<span class="tag">${tag}</span>` : ""}
-          </div>
-          <div class="price-card">
-            <span class="opt-name">${opt.name}</span>
-            <span class="opt-price">${money(unitPrice(opt))} <small>${aisle.priceLabel || ""}</small></span>
-            <span class="opt-total">${over ? "Over budget" : subLine}</span>
-          </div>
-        </button>`;
-    }).join("");
+    const view = RENDERERS[aisle.type](aisle, version);
+    const skipLabel = aisle.skipLabel || `Skip ${aisle.title.toLowerCase()}`;
 
     const node = el(`
       <section class="screen aisle">
@@ -183,43 +171,36 @@
         <div class="aisle-sign">
           ${window.ART.signIcons[aisle.art] ? window.ART.signIcons[aisle.art]() : ""}
           <div>
-            <span class="sign-num">Aisle ${aisle.number}</span>
+            <span class="sign-num">Aisle ${aisle.number} of ${AISLES.length}</span>
             <h2>${aisle.department}</h2>
           </div>
         </div>
         <p class="aisle-prompt">${aisle.prompt}</p>
-        <div class="options">${optionCards}</div>
+        ${view.html}
         <div class="actions">
-          <button class="btn ghost" id="skip">Skip ${aisle.title.toLowerCase()}</button>
+          <button class="btn ghost" id="skip">${skipLabel}</button>
           <button class="btn primary" id="go" disabled>Pick one above</button>
         </div>
         <p class="no-back">Heads up: once you leave an aisle, you can't come back.</p>
       </section>`);
 
     const goBtn = node.querySelector("#go");
-    node.querySelectorAll(".option").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        selected = aisle.options.find((o) => o.id === btn.dataset.id);
-        node.querySelectorAll(".option").forEach((b) =>
-          b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
-        goBtn.disabled = false;
-        goBtn.textContent = `Add to cart · ${money(costOf(selected))} →`;
-      });
-    });
-    node.querySelector("#skip").addEventListener("click", () => finishAisle(null));
-    goBtn.addEventListener("click", () => finishAisle(selected));
+    node.querySelector("#skip").addEventListener("click", () =>
+      finishAisle({ choice: view.skipChoice ?? "skip", qty: 0, spent: 0, extra: view.skipExtra ? view.skipExtra() : {} }));
+    view.setup(node, goBtn, finishAisle);
 
-    function finishAisle(opt) {
-      const spent = opt ? costOf(opt) : 0;
-      trip.budgetLeft = Math.round((trip.budgetLeft - spent) * 100) / 100;
-      if (aisle.listItem) trip.list[aisle.listItem] = opt ? "got" : "skipped";
+    // result = { choice, qty, spent, line (receipt text), extra (more Sheet columns) }
+    function finishAisle(result) {
+      trip.budgetLeft = round2(trip.budgetLeft - result.spent);
+      if (aisle.listItem) trip.list[aisle.listItem] = result.qty > 0 ? "got" : "skipped";
       trip.results.push({
         aisle,
         version,
-        choice: opt ? opt.id : "skip",
-        name: opt ? (opt.receiptName || opt.name) : null,
-        qty: opt ? aisle.quantity : 0,
-        spent,
+        choice: result.choice,
+        qty: result.qty,
+        spent: result.spent,
+        line: result.line || null,
+        extra: result.extra || {},
         budgetAfter: trip.budgetLeft,
         seconds: Math.round((performance.now() - enteredMs) / 100) / 10,
       });
@@ -230,6 +211,178 @@
 
     show(node);
   }
+
+  const RENDERERS = {
+    // ---- "choice": pick ONE option (or skip). One option = a Buy / Skip aisle. ----
+    choice(aisle, version) {
+      const qty = aisle.quantity || 1;
+      const opts = aisle.options.filter((o) => !o.onlyIn || o.onlyIn.includes(version));
+      const unit = (o) => byVersion(o.unitPrice, version);
+      const cost = (o) => round2(unit(o) * qty);
+
+      const cards = opts.map((o) => {
+        const over = !fits(cost(o));
+        const tag = byVersion(o.tag, version);
+        const was = byVersion(o.wasPrice, version);
+        const sub = over ? "Over budget" : qty > 1 ? `${qty} for ${money(cost(o))}` : (o.detail || "");
+        return `
+          <button class="option" data-id="${o.id}" aria-pressed="false" ${over ? "disabled" : ""}>
+            <div class="art">
+              ${window.ART.products[aisle.art](o, version)}
+              ${tag ? `<span class="tag">${tag}</span>` : ""}
+            </div>
+            <div class="price-card">
+              <span class="opt-name">${o.name}</span>
+              ${o.pitch ? `<span class="opt-pitch">${o.pitch}</span>` : ""}
+              <span class="opt-price">${was ? `<s class="was">${money(was)}</s> ` : ""}${money(unit(o))} <small>${aisle.priceLabel || ""}</small></span>
+              <span class="opt-total ${over ? "over" : ""}">${sub}</span>
+            </div>
+          </button>`;
+      }).join("");
+
+      const grid = `<div class="options cols-${opts.length}">${cards}</div>`;
+      return {
+        html: aisle.layout === "endcap"
+          ? `<div class="endcap"><div class="endcap-banner">✨ NEW THIS WEEK ✨</div>${grid}</div>` : grid,
+        setup(node, goBtn, done) {
+          let selected = null;
+          const buttons = node.querySelectorAll(".option");
+          const select = (btn) => {
+            selected = opts.find((o) => o.id === btn.dataset.id);
+            buttons.forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+            goBtn.disabled = false;
+            goBtn.textContent = `Add to cart · ${money(cost(selected))} →`;
+          };
+          buttons.forEach((btn) => btn.addEventListener("click", () => select(btn)));
+          // A single product (Buy / Skip aisle): select it straight away, if affordable.
+          if (opts.length === 1 && !buttons[0].disabled) select(buttons[0]);
+          goBtn.addEventListener("click", () => done({
+            choice: selected.id, qty, spent: cost(selected),
+            line: `${qty} × ${selected.receiptName || selected.name}`,
+          }));
+        },
+      };
+    },
+
+    // ---- "quantity": choose how many (0 to maxQty). Chips. ----
+    quantity(aisle, version) {
+      const big = byVersion(aisle.tagBig, version);
+      const small = byVersion(aisle.tagSmall, version);
+      return {
+        skipChoice: 0,
+        html: `
+          <div class="single">
+            <div class="option static">
+              <div class="art">${window.ART.products[aisle.art](aisle, version)}</div>
+              <div class="price-card">
+                <span class="opt-name">${aisle.name}</span>
+                <div class="shelf-tag"><span class="shelf-big">${big}</span>${small ? `<span class="shelf-small">${small}</span>` : ""}</div>
+                <div class="stepper" role="group" aria-label="How many bags">
+                  <button class="btn step" id="minus" aria-label="One fewer">−</button>
+                  <span class="count" id="count" aria-live="polite">0</span>
+                  <button class="btn step" id="plus" aria-label="One more">+</button>
+                </div>
+                <span class="opt-total" id="qtynote">bags</span>
+              </div>
+            </div>
+          </div>`,
+        setup(node, goBtn, done) {
+          let n = 0;
+          const price = aisle.unitPrice;
+          const plus = node.querySelector("#plus"), minus = node.querySelector("#minus");
+          const update = () => {
+            node.querySelector("#count").textContent = n;
+            minus.disabled = n === 0;
+            const nextFits = fits(round2((n + 1) * price));
+            plus.disabled = n >= aisle.maxQty || !nextFits;
+            node.querySelector("#qtynote").textContent =
+              n < aisle.maxQty && !nextFits ? "Over budget for more" : n === 1 ? "bag" : "bags";
+            goBtn.disabled = n === 0;
+            goBtn.textContent = n === 0 ? "Choose how many" : `Add ${n} bag${n > 1 ? "s" : ""} · ${money(round2(n * price))} →`;
+          };
+          plus.addEventListener("click", () => { n++; update(); });
+          minus.addEventListener("click", () => { n--; update(); });
+          update();
+          goBtn.addEventListener("click", () => done({
+            choice: n, qty: n, spent: round2(n * price), line: `${n} × ${aisle.receiptName}`,
+          }));
+        },
+      };
+    },
+
+    // ---- "coupon": one product + a $-off coupon. A = one click, B = type a code. Pasta sauce. ----
+    coupon(aisle, version) {
+      const full = aisle.unitPrice, off = aisle.couponValue;
+      let applied = false;
+      const couponHTML = version === "A"
+        ? `<div class="coupon">
+             <span class="coupon-amt">${money(off)} OFF</span>
+             <span class="coupon-what">${aisle.title}</span>
+             <button class="btn small" id="clip">✂️ Clip coupon</button>
+           </div>`
+        : `<div class="flyer">
+             <span class="flyer-head">This week's flyer</span>
+             <p>Save <b>${money(off)}</b> on ${aisle.title.toLowerCase()} with code</p>
+             <span class="flyer-code">${aisle.couponCode}</span>
+             <label class="code-label" for="code">Enter the 6-digit code:</label>
+             <div class="code-row">
+               <input id="code" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••••">
+               <button class="btn small" id="apply">Apply</button>
+             </div>
+             <span class="code-msg" id="codemsg" role="status"></span>
+           </div>`;
+      return {
+        skipExtra: () => ({ coupon: "N" }),
+        html: `
+          <div class="coupon-aisle">
+            <div class="option static">
+              <div class="art">${window.ART.products[aisle.art](aisle, version)}</div>
+              <div class="price-card">
+                <span class="opt-name">${aisle.name}</span>
+                <span class="opt-price" id="price">${money(full)}</span>
+                <span class="opt-total" id="note">${aisle.detail || ""}</span>
+              </div>
+            </div>
+            ${couponHTML}
+          </div>`,
+        setup(node, goBtn, done) {
+          const price = () => round2(applied ? full - off : full);
+          const update = () => {
+            node.querySelector("#price").innerHTML = applied
+              ? `<s class="was">${money(full)}</s> ${money(price())}` : money(price());
+            const ok = fits(price());
+            node.querySelector("#note").textContent = ok ? (aisle.detail || "") : "Over budget";
+            node.querySelector("#note").classList.toggle("over", !ok);
+            goBtn.disabled = !ok;
+            goBtn.textContent = `Add to cart · ${money(price())} →`;
+          };
+          const apply = () => { applied = true; update(); };
+          if (version === "A") {
+            const clip = node.querySelector("#clip");
+            clip.addEventListener("click", () => { apply(); clip.disabled = true; clip.textContent = "✓ Clipped"; });
+          } else {
+            const input = node.querySelector("#code"), msg = node.querySelector("#codemsg");
+            const tryCode = () => {
+              if (input.value.replace(/\D/g, "") === aisle.couponCode) {
+                apply(); input.disabled = true; node.querySelector("#apply").disabled = true;
+                msg.textContent = `✓ ${money(off)} off applied`; msg.className = "code-msg ok";
+              } else {
+                msg.textContent = "That code doesn't match — check the flyer."; msg.className = "code-msg err";
+              }
+            };
+            node.querySelector("#apply").addEventListener("click", tryCode);
+            input.addEventListener("keydown", (e) => { if (e.key === "Enter") tryCode(); });
+          }
+          update();
+          goBtn.addEventListener("click", () => done({
+            choice: "buy", qty: 1, spent: price(),
+            line: `1 × ${aisle.receiptName}${applied ? " w/ coupon" : ""}`,
+            extra: { coupon: applied ? "Y" : "N" },   // coupon used on the purchase
+          }));
+        },
+      };
+    },
+  };
 
   // ---------- the ONE row sent to the Sheet ----------
   function buildRow() {
@@ -256,6 +409,8 @@
       row[p + "spent"] = r.spent;
       row[p + "budget_after"] = r.budgetAfter;
       row[p + "seconds"] = r.seconds;
+      // Aisle-specific extras, e.g. a9_coupon (Y/N)
+      Object.keys(r.extra).forEach((k) => { row[p + k] = r.extra[k]; });
     });
     row.hp = trip.hp; // honeypot — Apps Script drops rows where this isn't empty
     return row;
@@ -276,9 +431,12 @@
   function checkoutScreen() {
     const row = buildRow();
 
-    const lines = trip.results.map((r) => `
-      <li><span>${r.name ? `${r.qty} × ${r.name}` : `<s>${r.aisle.title}</s> (skipped)`}</span>
-          <span>${money(r.spent)}</span></li>`).join("");
+    // Receipt: everything bought, then which list items were skipped.
+    const bought = trip.results.filter((r) => r.qty > 0);
+    const lines = bought.length
+      ? bought.map((r) => `<li><span>${r.line}</span><span>${money(r.spent)}</span></li>`).join("")
+      : `<li><span>(nothing bought)</span><span>${money(0)}</span></li>`;
+    const skipped = LIST.filter((it) => trip.list[it.id] === "skipped").map((it) => it.label);
 
     const node = el(`
       <section class="screen checkout">
@@ -289,6 +447,7 @@
           <ul class="lines">${lines}</ul>
           <div class="total"><span>Total</span><span>${money(row.total_spent)}</span></div>
           <div class="total sub"><span>Budget left</span><span>${money(trip.budgetLeft)}</span></div>
+          ${skipped.length ? `<p class="skipped-note">Skipped from your list: ${skipped.join(", ")}</p>` : ""}
           <p class="status" id="status" role="status">Saving your trip…</p>
         </div>
         <div class="debug" id="debug" hidden>

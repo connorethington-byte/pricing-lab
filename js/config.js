@@ -14,5 +14,5 @@ window.LAB_CONFIG = {
   budget: 45.0,
 
   // Bump this whenever you change an aisle, so you can tell rows apart in the Sheet.
-  appVersion: "phase2-a2-v1",
+  appVersion: "phase2-all10-draft-v1",
 };
