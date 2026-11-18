@@ -18,42 +18,45 @@ window.ART = (function () {
       </g>`;
   }
 
-  // Slots in a crate, FRONT row first, so "3 left" = the 3 at the front.
-  // Each slot: [x, y]. Coordinates are inside a 220 x 170 viewBox.
-  const SLOTS = {
-    small: [ // 12 regular avocados
-      [36,104],[73,104],[110,104],[147,104],[184,104],
-      [54,88],[91,88],[128,88],[165,88],
-      [73,72],[110,72],[147,72],
-    ],
-    big: [   // 8 jumbo avocados
-      [55,98],[110,98],[165,98],
-      [82,78],[138,78],
-      [55,62],[110,62],[165,62],
-    ],
-  };
-  const TILTS = [-12, 8, -4, 14, -9, 5, -15, 10, -6, 12, -3, 7];
-
-  // A wooden produce crate holding `count` avocados ("full" = every slot).
-  function avocadoCrate(size, count) {
-    const slots = size > 1 ? SLOTS.big : SLOTS.small;
-    const n = count === "full" ? slots.length : Math.min(count, slots.length);
-    // Draw back rows first so front avocados overlap them.
-    let fruit = "";
-    for (let i = n - 1; i >= 0; i--) {
-      const [x, y] = slots[i];
-      fruit += avocado(x, y, size, TILTS[i % TILTS.length]);
+  // A mesh produce bag holding `count` avocados (4 or 5), with a header tag.
+  function avocadoBag(count) {
+    const n = count || 4;
+    const spots = n >= 5
+      ? [[74, 128, -10], [110, 132, 6], [146, 128, 12], [92, 96, -4], [128, 96, 10]]
+      : [[90, 128, -8], [130, 128, 10], [100, 96, 4], [124, 98, -10]];
+    const w = n >= 5 ? 124 : 96;
+    let mesh = "";
+    for (let x = 110 - w / 2 - 20; x < 110 + w / 2 + 20; x += 12) {
+      mesh += `M${x},62 l40,100 M${x + 40},62 l-40,100 `;
     }
     return `
       <svg viewBox="0 0 220 170" class="crate-svg" aria-hidden="true">
-        <!-- back wall of crate -->
-        <path d="M18,40 L202,40 L196,120 L24,120 Z" fill="#8A5A2B" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M24,52 L196,52" stroke="#6E4520" stroke-width="3"/>
-        ${fruit}
-        <!-- front panel -->
-        <path d="M8,112 L212,112 L204,164 L16,164 Z" fill="#C98B4E" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M12,129 L208,129 M14,146 L206,146" stroke="#A86F38" stroke-width="3"/>
-        <circle cx="26" cy="120" r="2.5" fill="${INK}"/><circle cx="194" cy="120" r="2.5" fill="${INK}"/>
+        <defs><clipPath id="bag${n}"><path d="M${110 - w / 2},66 Q${110 - w / 2 - 14},150 ${110 - w / 4},158 L${110 + w / 4},158 Q${110 + w / 2 + 14},150 ${110 + w / 2},66 Z"/></clipPath></defs>
+        <ellipse cx="110" cy="161" rx="${w / 2 + 6}" ry="5" fill="${INK}" opacity="0.12"/>
+        ${spots.slice(0, n).map(([x, y, r]) => avocado(x, y, 1.05, r)).join("")}
+        <path d="${mesh}" stroke="#E8573A" stroke-width="2" opacity="0.75" clip-path="url(#bag${n})"/>
+        <path d="M${110 - w / 2},66 Q${110 - w / 2 - 14},150 ${110 - w / 4},158 L${110 + w / 4},158 Q${110 + w / 2 + 14},150 ${110 + w / 2},66"
+              fill="none" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
+        <rect x="${110 - 42}" y="44" width="84" height="24" rx="5" fill="#F2B134" stroke="${INK}" stroke-width="2.5"/>
+        <text x="110" y="61" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="12" fill="${INK}">${n} AVOCADOS</text>
+      </svg>`;
+  }
+
+  // A bunch of bananas (practice aisle).
+  function bananas(count) {
+    const n = count || 4;
+    let out = "";
+    for (let i = 0; i < n; i++) {
+      const a = -40 + (80 / (n - 1 || 1)) * i;
+      out += `<g transform="rotate(${a} 110 70)">
+        <path d="M104,72 C96,110 106,140 128,152 C118,132 116,108 118,72 Z" fill="#FFD23F" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M126,148 l6,6" stroke="${INK}" stroke-width="3" stroke-linecap="round"/></g>`;
+    }
+    return `
+      <svg viewBox="0 0 220 170" class="crate-svg" aria-hidden="true">
+        <ellipse cx="110" cy="161" rx="70" ry="5" fill="${INK}" opacity="0.12"/>
+        ${out}
+        <rect x="102" y="58" width="16" height="18" rx="4" fill="#6B8E23" stroke="${INK}" stroke-width="2.5"/>
       </svg>`;
   }
 
@@ -162,7 +165,7 @@ window.ART = (function () {
 
   // ---------- Coffee bag (size from oz) ----------
   function coffeeBag(opt) {
-    const s = 0.55 + 0.45 * ((opt.oz || 24) / 24);
+    const s = 0.5 + 0.5 * ((opt.oz || 20) / 20);   // drawn to scale: 10 oz small … 20 oz large
     const w = 96 * s, h = 132 * s, x = 110 - w / 2, y = 160 - h;
     return svg(`
       ${shadow(110, w / 2 + 8)}
@@ -200,21 +203,21 @@ window.ART = (function () {
         <circle cx="${121 + i * 16}" cy="${cy - 3}" r="1.8" fill="${INK}"/><circle cx="${127 + i * 16}" cy="${cy + 3}" r="1.8" fill="${INK}"/>`).join("")}
       ${label(79, cy - 2, opt.brand || "COOKIES", 11, "#fff")}
       ${label(79, cy + 12, "CHOC CHIP", 8, "#fff", 600)}`;
-    if ((opt.packs || 1) === 1) return svg(`${shadow(110, 70)}${scaled(1.05, pack(128))}`);
+    if ((opt.packs || 1) === 1) return svg(`${shadow(110, 58)}${scaled(0.86, pack(132))}`);
     return svg(`${shadow(110, 66)}${scaled(0.86, pack(132) + `<g transform="translate(6 0)">${pack(80)}</g>` + `<g transform="translate(-4 0)">${pack(28)}</g>`)}`);
   }
 
   // ---------- Juice: plain carton or brand bottle ----------
   function juice(opt) {
     if (opt.style === "bottle") {
-      return svg(`
+      return svg(scaled(opt.scale || 1, `
         ${shadow(110, 40)}
         <path d="M98,22 L122,22 L122,40 Q146,54 146,80 L146,150 Q146,158 138,158 L82,158 Q74,158 74,150 L74,80 Q74,54 98,40 Z" fill="#FFA62B" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
         <rect x="95" y="12" width="30" height="14" rx="4" fill="#3E8E41" stroke="${INK}" stroke-width="2.5"/>
         <rect x="78" y="88" width="64" height="50" rx="6" fill="#FFF8EC" stroke="${INK}" stroke-width="2.5"/>
         <circle cx="110" cy="104" r="7" fill="#FFD23F" stroke="${INK}" stroke-width="1.5"/>
         ${label(110, 124, "SUNNY", 10, INK)}${label(110, 134, "GROVE", 8, INK, 600)}
-        <rect x="80" y="52" width="5" height="26" rx="2.5" fill="#fff" opacity="0.4"/>`);
+        <rect x="80" y="52" width="5" height="26" rx="2.5" fill="#fff" opacity="0.4"/>`));
     }
     return svg(`
       ${shadow(110, 40)}
@@ -228,45 +231,42 @@ window.ART = (function () {
       <path d="M110,106 L110,134 M96,120 L124,120" stroke="#FFD08A" stroke-width="2"/>`);
   }
 
-  // ---------- Pasta sauce jar: classic or "new look" label (same jar size) ----------
+  // ---------- Pasta sauce jar: same label always; jar drawn to scale by ounces ----------
   function sauceJar(opt) {
-    const nl = opt.style === "newlook";
-    return svg(`
+    const s = Math.pow((opt.units || 24) / 30, 0.7);   // 30 oz = full size
+    return svg(scaled(s, `
       ${shadow(110, 46)}
-      <rect x="78" y="22" width="64" height="18" rx="4" fill="${nl ? INK : "#E0B03C"}" stroke="${INK}" stroke-width="3"/>
+      <rect x="78" y="22" width="64" height="18" rx="4" fill="#E0B03C" stroke="${INK}" stroke-width="3"/>
       <path d="M72,40 L148,40 Q156,46 156,60 L156,148 Q156,158 146,158 L74,158 Q64,158 64,148 L64,60 Q64,46 72,40 Z" fill="#C8372D" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
-      ${nl
-        ? `<rect x="64" y="72" width="92" height="62" fill="#2F6E22" stroke="${INK}" stroke-width="2.5"/>
-           <path d="M64,84 L156,84 M64,122 L156,122" stroke="#E0B03C" stroke-width="2.5"/>
-           ${label(110, 102, "MARINARA", 12, "#fff")}${label(110, 116, "Artisan", 10, "#E0B03C", 500)}`
-        : `<rect x="64" y="78" width="92" height="52" fill="#FFF1DC" stroke="${INK}" stroke-width="2.5"/>
-           <circle cx="84" cy="104" r="11" fill="#E8573A" stroke="${INK}" stroke-width="2"/>
-           <path d="M80,94 l4,3 l4,-3" stroke="#4E9F3D" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-           ${label(126, 101, "MARINARA", 10, INK)}${label(126, 115, "Classic", 9, "#5E5B6B", 600)}`}
-      <rect x="72" y="52" width="5" height="16" rx="2.5" fill="#fff" opacity="0.35"/>`);
+      <rect x="64" y="78" width="92" height="52" fill="#FFF1DC" stroke="${INK}" stroke-width="2.5"/>
+      <circle cx="84" cy="104" r="11" fill="#E8573A" stroke="${INK}" stroke-width="2"/>
+      <path d="M80,94 l4,3 l4,-3" stroke="#4E9F3D" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      ${label(126, 101, "MARINARA", 10, INK)}${label(126, 115, "Classic", 9, "#5E5B6B", 600)}
+      <rect x="72" y="52" width="5" height="16" rx="2.5" fill="#fff" opacity="0.35"/>`));
   }
 
-  // ---------- Paper towels: 6 regular rolls or 4 MEGA rolls ----------
+  // ---------- Paper towels: N regular rolls in a wrapped pack (bottom row fills first) ----------
   function towels(opt) {
     const n = opt.rolls || 6;
-    const [cols, tiers] = n === 6 ? [3, 2] : n === 4 ? [2, 2] : [1, 1];
-    const rw = opt.mega ? 62 : 40, rh = opt.mega ? 62 : 50;
+    const cols = 3, tiers = 2, rw = 40, rh = 50;
     const W = cols * rw, H = tiers * rh, x0 = 110 - W / 2, y0 = 156 - H;
+    const slots = [];
+    for (let t = tiers - 1; t >= 0; t--) for (let c = 0; c < cols; c++) slots.push([c, t]);
+    // n = 5: top row has 2, centred
     let rolls = "";
-    for (let t = 0; t < tiers; t++) {
-      for (let c = 0; c < cols; c++) {
-        const x = x0 + c * rw, y = y0 + t * rh;
-        rolls += `
-          <rect x="${x + 1}" y="${y + 5}" width="${rw - 2}" height="${rh - 6}" fill="#fff" stroke="${INK}" stroke-width="2.2"/>
-          <path d="M${x + 1},${y + rh * 0.45} L${x + rw - 1},${y + rh * 0.45}" stroke="#8FC3E6" stroke-width="2" stroke-dasharray="3 3"/>
-          <ellipse cx="${x + rw / 2}" cy="${y + 5}" rx="${rw / 2 - 1}" ry="5" fill="#F4F1EA" stroke="${INK}" stroke-width="2.2"/>
-          <ellipse cx="${x + rw / 2}" cy="${y + 5}" rx="${rw / 7}" ry="2.2" fill="#C98B4E"/>`;
-      }
-    }
-    const text = opt.mega ? "MEGA" : n + " ROLLS";
+    slots.slice(0, n).sort((p, q) => p[1] - q[1]).forEach(([c, t]) => {
+      const shift = t === 0 && n === 5 ? rw / 2 : 0;
+      if (t === 0 && n === 5 && c === 2) return;
+      const x = x0 + c * rw + shift, y = y0 + t * rh;
+      rolls += `
+        <rect x="${x + 1}" y="${y + 5}" width="${rw - 2}" height="${rh - 6}" fill="#fff" stroke="${INK}" stroke-width="2.2"/>
+        <path d="M${x + 1},${y + rh * 0.45} L${x + rw - 1},${y + rh * 0.45}" stroke="#8FC3E6" stroke-width="2" stroke-dasharray="3 3"/>
+        <ellipse cx="${x + rw / 2}" cy="${y + 5}" rx="${rw / 2 - 1}" ry="5" fill="#F4F1EA" stroke="${INK}" stroke-width="2.2"/>
+        <ellipse cx="${x + rw / 2}" cy="${y + 5}" rx="${rw / 7}" ry="2.2" fill="#C98B4E"/>`;
+    });
     const wrap = `<rect x="${x0 - 7}" y="${y0 - 6}" width="${W + 14}" height="${H + 10}" rx="10" fill="#BFE0F5" opacity="0.45" stroke="${INK}" stroke-width="2.5"/>
-         <rect x="${110 - 30}" y="${y0 + H / 2 - 10}" width="60" height="20" rx="5" fill="${opt.mega ? "#E8573A" : "#2F6E9E"}" stroke="${INK}" stroke-width="2"/>
-         ${label(110, y0 + H / 2 + 5, text, 11, "#fff")}`;
+         <rect x="${110 - 30}" y="${y0 + H / 2 - 10}" width="60" height="20" rx="5" fill="#2F6E9E" stroke="${INK}" stroke-width="2"/>
+         ${label(110, y0 + H / 2 + 5, n + " ROLLS", 11, "#fff")}`;
     return svg(`${shadow(110, W / 2 + 10)}${rolls}${wrap}`);
   }
 
@@ -279,6 +279,7 @@ window.ART = (function () {
   const signCookie = () => icon("-22 -22 44 44", `<circle r="17" fill="#D9A066" stroke="${INK}" stroke-width="2.5"/><g fill="${INK}"><circle cx="-6" cy="-6" r="2.5"/><circle cx="6" cy="-3" r="2.5"/><circle cx="-2" cy="7" r="2.5"/><circle cx="8" cy="8" r="2"/></g>`);
   const signGlass = () => icon("-22 -22 44 44", `<path d="M-12,-16 L12,-16 L9,18 L-9,18 Z" fill="#fff" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/><path d="M-11,-4 L11,-4 L9,16 L-9,16 Z" fill="#FFA62B"/>`);
   const signJar = () => icon("-22 -22 44 44", `<rect x="-10" y="-19" width="20" height="7" rx="2" fill="#E0B03C" stroke="${INK}" stroke-width="2"/><rect x="-14" y="-12" width="28" height="30" rx="5" fill="#C8372D" stroke="${INK}" stroke-width="2.5"/><rect x="-14" y="-3" width="28" height="11" fill="#FFF1DC"/>`);
+  const signBanana = () => icon("-22 -22 44 44", `<path d="M-6,-16 C-14,4 -6,16 14,18 C2,8 0,-4 2,-16 Z" fill="#FFD23F" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`);
   const signRoll = () => icon("-22 -22 44 44", `<rect x="-12" y="-14" width="24" height="32" fill="#fff" stroke="${INK}" stroke-width="2.5"/><ellipse cx="0" cy="-14" rx="12" ry="4.5" fill="#F4F1EA" stroke="${INK}" stroke-width="2.5"/><ellipse cx="0" cy="-14" rx="3.5" ry="1.6" fill="#C98B4E"/>`);
 
   function cart() {
@@ -291,7 +292,8 @@ window.ART = (function () {
 
   // Lookup: aisle.art -> function(option, version) returning the product drawing.
   const products = {
-    avocado: (opt) => avocadoCrate(opt.size, opt.stock || "full"),
+    avocado: (opt) => avocadoBag(opt.count),
+    banana: (opt) => bananas(opt.count),
     chicken: chicken,
     eggs: (opt) => eggCarton(opt.count),
     cereal: cerealBox,
@@ -303,7 +305,7 @@ window.ART = (function () {
     towels: towels,
   };
   const signIcons = {
-    avocado: avocadoHalf, chicken: signDrumstick, eggs: eggIcon, cereal: signBowl, coffee: signMug,
+    avocado: avocadoHalf, banana: signBanana, chicken: signDrumstick, eggs: eggIcon, cereal: signBowl, coffee: signMug,
     chips: signChip, cookies: signCookie, juice: signGlass, sauce: signJar, towels: signRoll,
   };
 

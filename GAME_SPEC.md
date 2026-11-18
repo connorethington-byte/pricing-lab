@@ -1,59 +1,64 @@
-# Connor's Shopping Game — Game Spec (v2: Unit-Price Traps)
+# Connor's Shopping Game — Game Spec v3: "Your Gut vs. The Math"
 
-Replaces the earlier 10-aisle pricing-psychology design. Ice cream and the new-product aisle are DROPPED (for now).
+Replaces v2. Why: in play-testing, v2 felt like doing math the whole time; mixed price formats (per lb vs total) were annoying; pasta just tested reading fine print. v3 makes every decision a **fast gut call** while keeping hidden traps/deals so the ending can show **where your gut cost you money**.
 
-## Concept
-Every aisle has a **trick** (a flashy tag, a "deal," a bigger box). For every shopper, each aisle independently flips a coin (50/50):
-- 🪤 **TRAP:** the trick option is **~20% WORSE** per unit than the plain option
-- ✅ **DEAL:** the trick option is **~20% BETTER** per unit than the plain option
+## Core mechanic
+- **8 trick aisles + 2 filler aisles.** Each trick aisle has a pricing trick (sticker, banner, "deal").
+- For every shopper, each aisle independently flips a coin (50/50):
+  - 🪤 **TRAP:** trick option is **20% WORSE** per unit than the plain option
+  - ✅ **DEAL:** trick option is **20% BETTER** per unit than the plain option
+- **Filler aisles:** two plain options, no tricks/stickers. One is randomly 20% better per unit. Measures baseline "gut sense of value" and keeps players from noticing that every aisle is a gimmick.
+- Key question: do people take the trick equally often whether it's a TRAP or a DEAL? (= gut follows the label, not the value)
 
-Shoppers never know which. Measuring the % who take the trick in TRAP vs DEAL versions shows which tricks fool people most.
+## Shopper experience
+- Intro: **"Spend wisely and go for the best deals. You've got 6 seconds per aisle — trust your gut!"**
+- **Practice aisle first (not recorded):** a simple two-option aisle so players learn the tap + timer before it counts.
+- **⏱️ 6-second countdown per aisle**, shown as a friendly shopping timer. Timer starts when products appear.
+- **One tap on a product = it goes in the cart and the game moves on.** No separate "Add to cart" button (too slow for 6 seconds). Keep a small "Skip" button.
+- **Timeout = nothing added**, recorded as `timeout`. Reveal can say "You froze on the cereal."
+- **Randomize which side (left/right) the trick option appears on**, per aisle, per shopper. Record the side.
+- **Same price format on every card:** big total price + size underneath (e.g. "$8" / "24 oz box"). No per-lb or per-unit prices anywhere during shopping.
+- **Round numbers only.**
+- **Draw products to scale** where size differs (smaller jar looks smaller, family-size box looks bigger), so a sharp gut *could* catch it at a glance.
+- No budget limit; show a small running cart total. Grocery list: avocados, chicken, eggs, cereal, coffee, chips, cookies, juice, pasta sauce, paper towels.
+- Smart Shopper Score stays a surprise until the end.
 
-## Rules shown to shoppers
-- Intro: **"Spend wisely and go for the best deals."** No budget limit. Show a running cart total.
-- Grocery list (10): avocados, chicken, eggs, cereal, coffee, chips, cookies, juice, pasta sauce, paper towels.
-- One aisle per screen, fixed order, no going back. Shopper picks one option or skips.
-- **Show price + package size** (oz, count, lb, sheets) on every product, like real packaging.
-- **NEVER show unit prices ($/oz etc.) during shopping.** Unit prices appear only in the end reveal.
-- Do not reveal the Smart Shopper Score until the end (surprise).
+## The 10 aisles (all numbers in config)
 
-## Data to record per aisle
-version (TRAP/DEAL), option chosen (trick / plain / skip), units bought, money lost, seconds on aisle.
-**Money lost** = (unit price of chosen option − best unit price in that aisle) × units bought. Skip = $0 lost (flag as skipped).
-Old Sheet columns/rows from v1 are obsolete — start a fresh sheet tab.
+| # | Aisle | Type | Trick | Plain option | Trick option — DEAL | Trick option — TRAP | Unit |
+|---|---|---|---|---|---|---|---|
+| 1 | 🥑 Produce: Avocados | **FILLER** | none — two plain bags | Bag of 4, **$4** | Other bag: 5 for **$4** | Other bag: 5 for **$6** | per avocado |
+| 2 | 🍗 Meat: Chicken | Trick | **"VALUE PACK" sticker** | 2 lb pack, **$10** | Value Pack 3 lb, **$12** | Value Pack 3 lb, **$18** | per lb |
+| 3 | 🥚 Dairy: Eggs | Trick | **Low sticker price:** half dozen with "Just $X!" callout | Dozen, **$5** | Half dozen, **$2** | Half dozen, **$3** | per egg |
+| 4 | 🥣 Cereal | Trick | **"FAMILY SIZE!" banner**, big box | 12 oz box, **$5** | Family Size 24 oz, **$8** | Family Size 24 oz, **$12** | per oz |
+| 5 | ☕ Coffee | Trick | **Decoy:** Medium makes Large look smart (trick option = Large) | Small 10 oz, **$5** | Large 20 oz **$8**; decoy Medium 15 oz **$7** | Large 20 oz **$12**; decoy Medium 15 oz **$11** | per oz |
+| 6 | 🍫 Snacks: Chips | Trick | **"2 for $X!"** sign | 1 bag, **$2.50** | **2 for $4** | **2 for $6** | per bag |
+| 7 | 🍪 Cookies | Trick | **"Buy 2, Get 1 FREE!"** (bundle = 3 packs, pay for 2) | 1 pack 10 oz, **$5** | Packs $6 each → 3 for **$12** (30 oz) | Packs $9 each → 3 for **$18** (30 oz) | per oz |
+| 8 | 🥤 Drinks: Juice | Trick | **Fake sale:** ~~$10~~ crossed out + SALE tag | 60 oz, **$6** | Sale juice 50 oz, **$4** | Sale juice 50 oz, **$6** | per oz |
+| 9 | 🍝 Pantry: Pasta sauce | Trick | **"NEW LOOK!"** jar (same label text in both versions; same brand/flavor as classic) | Classic 24 oz, **$4** | New Look **30 oz**, $4 (jar drawn bigger) | New Look **20 oz**, $4 (jar drawn smaller) | per oz |
+| 10 | 🧻 Household: Paper towels | **FILLER** | none — two plain packs | 6 rolls, **$6** | Other pack: 5 rolls **$4** | Other pack: 5 rolls **$6** | per roll |
 
-## The 10 aisles (all numbers live in config)
+Check: every DEAL is exactly 20% better and every TRAP exactly 20% worse per unit than the plain option (cereal, chicken, eggs, coffee, chips, cookies, juice, pasta, fillers).
+Fix from play-test: pasta "New Look" jar must be the SAME product as Classic (same tomato label style, not "Artisan"/premium look) — only the "NEW LOOK!" badge and size differ.
 
-| # | Aisle | Trick | Plain option | Trick option — DEAL | Trick option — TRAP | Unit |
-|---|---|---|---|---|---|---|
-| 1 | 🥑 Produce: Avocados | **Scarcity:** "🔥 Only 3 left!" tag + bin shows 3 avocados | Regular avocado, 6 oz, $1.00 each | Jumbo, 9 oz, **$1.20** each | Jumbo, 9 oz, **$1.80** each | per oz (qty fixed at 2) |
-| 2 | 🍗 Meat: Chicken | **Mismatched units:** plain is labeled per lb, trick shows only one big pack price (weight in small print) | Chicken breast, **$4.99/lb**, 2 lb pack = $9.98 | "Value Pack" 3 lb, **$11.97/pack** | "Value Pack" 3 lb, **$17.97/pack** | per lb |
-| 3 | 🥚 Dairy: Eggs | **Low sticker price:** half dozen with "Just $X!" callout | Dozen, $4.80 | Half dozen, **$1.92** | Half dozen, **$2.88** | per egg |
-| 4 | 🥣 Cereal | **"FAMILY SIZE!"** giant box with banner | Regular box, 12 oz, $4.80 | Family Size, 20 oz, **$6.40** | Family Size, 20 oz, **$9.60** | per oz |
-| 5 | ☕ Coffee | **Decoy size:** Medium makes Large look smart (trick option = Large) | Small, 12 oz, $6.00 | Large 24 oz **$9.60**; decoy Medium 18 oz $9.20 | Large 24 oz **$14.40**; decoy Medium 18 oz $14.00 | per oz |
-| 6 | 🍫 Snacks: Chips | **Multi-buy:** big "2 for $X!" sign; singles price in small print | 1 bag, 8 oz, $2.50 | **2 for $4.00** | **2 for $6.00** | per bag |
-| 7 | 🍪 Cookies | **"Buy 2, Get 1 FREE!"** (bundle = 3 packs) | Brand A, 10 oz, $4.00 | Brand B 8 oz packs, **$3.84 each** → 3 packs for $7.68 | Brand B 8 oz packs, **$5.76 each** → 3 packs for $11.52 | per oz |
-| 8 | 🥤 Drinks: Juice | **Fake sale:** ~~$8.99~~ crossed out + SALE tag | Store juice, 64 oz, $4.48 | Sale juice, 52 oz, **$2.91** | Sale juice, 52 oz, **$4.37** | per oz |
-| 9 | 🍝 Pantry: Pasta sauce | **"NEW LOOK!"** jar (same label in both versions) | Classic jar, 24 oz, $4.00 | New Look jar, **30 oz**, $4.00 | New Look jar, **20 oz**, $4.00 (shrinkflation) | per oz |
-| 10 | 🧻 Household: Paper towels | **Inflated claim:** "4 MEGA rolls = 16 regular rolls!" (true sheet count in small print) | 6 regular rolls, 600 sheets, $6.00 | 4 Mega rolls, 880 sheets, **$7.04** | 4 Mega rolls, 880 sheets, **$10.56** | per sheet |
+## Data per aisle
+version (TRAP/DEAL), side of trick option (L/R), choice (trick / plain / skip / timeout), units bought, money lost, reaction time (ms).
+**Money lost** = (unit price of chosen option − best unit price in that aisle) × units bought. Skip/timeout = $0, flagged.
+Start a fresh Sheet tab for v3.
 
-Notes:
-- Bin/shelf position of plain vs trick option: keep consistent within an aisle across versions.
-- Cookies: options are "1 pack Brand A" or "Buy 2 Get 1 Free bundle (3 packs Brand B)".
-- Chips: options are "1 bag" or "2-for bundle".
+## End reveal: "Your Gut vs. The Math"
+1. Each aisle: what your gut picked vs what the math says, with unit prices revealed and $ lost.
+   e.g. "🥣 Your gut said FAMILY SIZE. The math said the regular box: $0.50/oz vs $0.42/oz. Cost: $2.00."
+2. **Total your gut cost you** ($ and % vs the smartest cart).
+3. 🪤 Fell for · ✅ Spotted · 💡 Lucky (took the trick when it was a real deal) · 🧊 Froze (timeouts).
+4. 🏆 Percentile vs other shoppers + "Your gut's weakness: ___" (trick that cost the most).
 
-## End reveal: "Where you lost money"
-1. Receipt with each item, then **unit prices revealed** next to each choice and the best option.
-2. **Total lost to tricks** ($ and % vs the smartest cart).
-3. 🪤 **Fell for** (traps taken, with $ lost each + one-line why, e.g. "The juice was 'on sale,' but at $0.084/oz it cost more than store juice at $0.070/oz").
-4. ✅ **Spotted** (traps avoided) and 💡 **Lucky/Smart** (took the trick when it was a real deal).
-5. 🏆 Percentile vs other shoppers + "Your weakness: ___" (the trick type that cost them most).
-
-## Survey (after reveal or before — keep short, anonymous)
-Student Y/N, age range, grocery shopping frequency, "Do you usually check price per ounce?" (never / sometimes / always).
+## Survey (short, anonymous)
+- "Did you mostly go with your gut or compare prices?" (1 = all gut … 7 = compared everything)
+- Student Y/N, age range, grocery shopping frequency, "Do you usually check price per ounce?" (never / sometimes / always)
 
 ## Results page (portfolio)
-- **Trap Leaderboard:** each trick's % taken when TRAP vs when DEAL, ranked by % fooled.
-- Average $ lost per shopper.
-- Do self-described "unit price checkers" actually do better?
-- Interview line: "Even when told to find the best deals, shoppers fell for [top trick] X% of the time. Customers judge price by signals, not math."
+- **Trap Leaderboard:** for each trick, % who took it when TRAP vs when DEAL. Small gap = gut follows the label.
+- Filler aisles = baseline gut accuracy with no tricks.
+- Average $ lost; do self-described "unit price checkers" actually do better under time pressure?
+- Interview line: "People shop on gut, and gut follows labels. Under time pressure, shoppers took the 'SALE' option almost as often when it was a rip-off as when it was a real deal."

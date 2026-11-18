@@ -300,6 +300,62 @@ h1, h2 { font-family: var(--font-head); margin: 0; line-height: 1.1; outline: no
 .vbadge.trap { background: #FDE1DA; }
 .vbadge.deal { background: #DFF2D8; }
 
+/* ---------- v3: timer, one-tap, reveal ---------- */
+.aisle-top { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+.aisle-top .aisle-sign { margin: 0; }
+.timer {
+  display: flex; align-items: center; gap: 8px; background: var(--card);
+  border: 3px solid var(--ink); border-radius: 999px; padding: 6px 12px; box-shadow: 0 3px 0 var(--ink);
+}
+.timer-num { font: 700 20px var(--font-head); min-width: 52px; }
+.timer-bar { width: 110px; height: 12px; border: 2.5px solid var(--ink); border-radius: 99px; overflow: hidden; background: #F1EADB; }
+.timer-fill { display: block; height: 100%; width: 100%; background: var(--green); }
+.timer.hurry .timer-fill { background: var(--tomato); }
+.timer.hurry .timer-num { color: var(--tomato); }
+.aisle .aisle-prompt { margin: 10px 0 12px; font-size: 18px; }
+.aisle .actions { margin-top: 14px; }
+.option.added { background: #E6F4DF; border-color: var(--green-dark); transform: scale(1.03); box-shadow: 0 4px 0 var(--green-dark), 0 0 0 4px var(--green) inset; }
+.option:disabled:not(.added) { opacity: 0.55; }
+.aisle { position: relative; }
+.flash {
+  position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%); z-index: 20;
+  font: 700 24px var(--font-head); background: var(--card); border: 3px solid var(--ink);
+  border-radius: 16px; padding: 12px 22px; box-shadow: var(--shadow); animation: pop 0.2s ease-out;
+}
+.flash.tap { background: #E6F4DF; }
+.flash.timeout { background: #FDE1DA; }
+@keyframes pop { from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } }
+.card.ready { border-top: 3px solid var(--ink); border-radius: var(--radius); text-align: center; }
+.card.ready h2 { font-size: clamp(28px, 7vw, 40px); color: var(--green-dark); margin: 4px 0 10px; }
+
+.pills.scale { flex-wrap: nowrap; gap: 6px; }
+.pills.scale .pill { flex: 1; }
+.pills.scale .pill span { display: block; text-align: center; padding: 8px 0; }
+.scale-ends { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+
+.scard.wide { grid-column: 1 / -1; }
+.tallies { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.tally {
+  background: var(--card); border: 3px solid var(--ink); border-radius: 14px; padding: 10px;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px;
+}
+.tally .tnum { font: 700 30px var(--font-head); }
+.tally .tlabel { font: 600 15px var(--font-head); }
+.tally .titems { font-size: 12px; color: var(--ink-soft); }
+.tally.fell { border-color: var(--tomato); } .tally.fell .tnum { color: var(--tomato); }
+.tally.spotted .tnum, .tally.lucky .tnum { color: var(--green-dark); }
+.tally.froze .tnum { color: #2F6E9E; }
+.glines { list-style: none; padding: 0; margin: 0; }
+.gline { padding: 10px 0 10px 12px; border-top: 2px dashed var(--line); border-left: 5px solid var(--line); margin-top: 2px; }
+.gline:first-child { border-top: 0; }
+.gline.ok { border-left-color: var(--green); }
+.gline.cost { border-left-color: var(--tomato); }
+.gtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 2px; }
+.gtext { font-size: 15px; }
+.vbadge.filler { background: #EDEBF5; }
+.gtotals { border-top: 2px solid var(--ink); margin-top: 8px; padding-top: 8px; }
+.gtotals div { display: flex; justify-content: space-between; padding: 2px 0; }
+
 /* ---------- test mode badge ---------- */
 .test-badge {
   background: var(--mustard); border: 2.5px solid var(--ink); border-radius: 10px;
@@ -337,6 +393,14 @@ h1, h2 { font-family: var(--font-head); margin: 0; line-height: 1.1; outline: no
   .options.cols-3 .opt-total { font-size: 12px; }
   .coupon-aisle { grid-template-columns: 1fr; }
   .scorecards { grid-template-columns: 1fr; }
+  .tallies { grid-template-columns: repeat(2, 1fr); }
+  .aisle-top { gap: 8px; }
+  .aisle-sign { padding: 4px 12px; }
+  .aisle-sign h2 { font-size: 22px; }
+  .sign-icon { width: 30px; height: 34px; }
+  .timer-bar { width: 70px; }
+  .aisle .aisle-prompt { margin: 8px 0; font-size: 16px; }
+  .aisle .actions .btn { flex: 0 0 auto; }
   .scard.big .sval { font-size: 44px; }
   .endcap { padding: 0 10px 14px; }
   .actions .btn { flex: 1 1 100%; }

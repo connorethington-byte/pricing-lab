@@ -11,12 +11,15 @@ window.LAB_CONFIG = {
   // and the checkout screen shows the row that WOULD have been sent.
   sheetUrl: "https://script.google.com/macros/s/AKfycbyVtlH9_zgbmESxhCC8-naNhIDbH9pkn762hfD6S5Jhox-qdOe4Gb5jcJGRraWkslu_IA/exec",
 
-  // Game v2 writes to its own fresh tab in the same Google Sheet.
-  sheetTab: "responses_v2",
+  // Game v3 writes to its own fresh tab in the same Google Sheet.
+  sheetTab: "responses_v3",
+
+  // Time limit per aisle (the practice aisle uses it too).
+  secondsPerAisle: 6,
 
   // Don't show a percentile until at least this many OTHER shoppers have played.
   minShoppersForRank: 5,
 
   // Bump this whenever you change an aisle, so you can tell rows apart in the Sheet.
-  appVersion: "v2-traps-1",
+  appVersion: "v3-gut-1",
 };
